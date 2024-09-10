@@ -2,6 +2,7 @@ package responseavailableseances;
 
 public class SeancesData {
 
+  //  @JsonAttribute?     todo
     private String time;
     private int seance_length;
     private String dateTime;
@@ -17,4 +18,7 @@ public class SeancesData {
     public String getDateTime() {
         return dateTime;
     }
+
+
+    // todo toString()
 }

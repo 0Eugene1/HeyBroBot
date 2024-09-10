@@ -1,5 +1,6 @@
 package bookingbot;
 
+import repositories.MastersRepository;
 import responsecloseravailableseances.Data;
 import com.google.gson.Gson;
 import masterlist.Master;
@@ -9,6 +10,7 @@ import responseavailableseances.SeancesData;
 import responsecloseravailableseances.ResponseSeanceDate;
 import schedule.ResponseSchedule;
 import schedule.ScheduleInfo;
+import services.MastersService;
 import services.ResponseServices;
 import services.Services;
 
@@ -17,12 +19,16 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
 import java.util.List;
 
-public class YClietnsService {
+public class YClientsService {
 
     private final Gson gson = new Gson();// Используем Gson для работы с JSO
+    private MastersService mastersService;
+
+    public YClientsService(MastersService mastersService) {
+        this.mastersService = mastersService;
+    }
 
     // ПОЛУЧИТЬ СПИСОК СОТРУДНИКОВ ДОСТУПНЫХ ДЛЯ БРОНИРОВАНИЯ
     public String getMasterList(int companyId) {
@@ -34,7 +40,6 @@ public class YClietnsService {
                     .header("Accept", "application/vnd.yclients.v2+json")
                     .header("Content-Type", "application/json")
                     .header("Authorization", "j8p3aadsnhaexg4wp8k9")
-                    .GET()
                     .build();
 
             // Отправляем запрос и получаем ответ
@@ -45,21 +50,14 @@ public class YClietnsService {
 
             //  Преобразуем JSON в объект MasterList
             ResponseMasterList responseMasterList = gson.fromJson(json, ResponseMasterList.class);
-            ArrayList<Master> masterNames = responseMasterList.getData();
+            mastersService.clearAndAddMasters(responseMasterList.getData());
 
-            StringBuilder builder = new StringBuilder();
-            int counter = 1;
-            for (Master name : masterNames) {
-                builder.append("(")
-                        .append(counter)
-                        .append(") ")
-                        .append(name)
-                        .append("\n");
-                counter++;
-            }
-            builder.append("Выберите мастера");
 
-            return builder.toString();
+            // todo toString() in MastersRepository
+
+
+
+            return mastersService.getMastersChoice();
 
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
@@ -72,7 +70,7 @@ public class YClietnsService {
         try (HttpClient client = HttpClient.newHttpClient()) {
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.yclients.com/api/v1/book_staff_seances/" + companyId + staff_id))
+                    .uri(URI.create("https://api.yclients.com/api/v1/book_staff_seances/" + companyId + "/" + staff_id))
                     .header("Accept", "application/vnd.yclients.v2+json")
                     .header("Content-Type", "application/json")
                     .header("Authorization", "j8p3aadsnhaexg4wp8k9") //todo нужно ли?
@@ -91,7 +89,7 @@ public class YClietnsService {
             for (Data responseSeance : responseSeances) {
                 builder.append("Информация о ближайшем сеансе: ").append(responseSeance)
                         .append("\n")
-                        .append(responseSeance.getSeances());
+                        .append(responseSeance.getSeances());       // fixme long line
 
             }
             return builder.toString();
@@ -101,7 +99,7 @@ public class YClietnsService {
             throw new RuntimeException(e);
         }
     }
-    // ПОЛУЧАЕМ УНИКАЛЬНЫЙ ID МАСТЕРА fixme как с этим работать и нужно ли?
+    // ПОЛУЧАЕМ УНИКАЛЬНЫЙ ID МАСТЕРА fixme как с этим работать и нужно ли?         StringBuilder instead of System.out.println()
 //    public void getMasterId(int companyId) { // нужно ли?
 //
 //        MasterList masterList = getMasterList(companyId);
@@ -158,7 +156,7 @@ public class YClietnsService {
         try(HttpClient client = HttpClient.newHttpClient()) {
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.yclients.com/api/v1/book_times/" + companyId + staffId + date))
+                    .uri(URI.create("https://api.yclients.com/api/v1/book_times/" + companyId + "/" + staffId + "/" + date))
                     .header("Accept", "application/vnd.yclients.v2+json")
                     .header("Content-Type", "application/json")
                     .header("Authorization", "j8p3aadsnhaexg4wp8k9")
@@ -179,10 +177,11 @@ public class YClietnsService {
                 builder.append("(")
                         .append(counter)
                         .append(") ")
-                        .append(seances);  //todo просто getData()?
+                        .append(seances)  //todo просто getData()?
+                        .append("\n");
                 counter++;
             }
-            builder.append("Выберите доступный сеанс");
+            builder.append("Выберите индекс желаемого сеанса");     // TODO no sessions for today
 
             return builder.toString();
 
@@ -192,15 +191,16 @@ public class YClietnsService {
     }
 
     //ПОЛУЧЕНИЕ ГРАФИКОВ РАБОТЫ СОТРУДНИКОВ
-    public String getSchedule(int companyId, String startDate, String endDate) {  //fixme КАК РАБОТАТЬ С ДАТАМИ?
+    public String getSchedule(int companyId) {  //fixme КАК РАБОТАТЬ С ДАТАМИ?
 
         try (HttpClient client = HttpClient.newHttpClient()) {
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.yclients.com/api/v1/company/" + companyId + "/staff/schedule?"))
+                    .uri(URI.create("https://api.yclients.com/api/v1/company/" + companyId + "/staff/schedule"))
                     .header("Accept", "application/vnd.yclients.v2+json")
                     .header("Content-Type", "application/json")
                     .header("Authorization", "j8p3aadsnhaexg4wp8k9")  //todo НЕ УКАЗАН ИДЕНТЕФИКАТОР, НО ОН УКАЗАН
+                    .GET()
                     .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());

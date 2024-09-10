@@ -7,7 +7,7 @@ public class Data {
     private String seance_date;
     private ArrayList<SeanceTime> seances;
 
-    public ArrayList<SeanceTime> getSeances() {
+    public ArrayList<SeanceTime> getSeances() {     // fixme  !!!
         return seances;
     }
 
