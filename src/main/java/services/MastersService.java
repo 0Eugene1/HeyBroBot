@@ -16,15 +16,15 @@ public class MastersService {
         mastersRepository.clearAndAddMasters(newMastersList);
     }
 
-    public int getStaffIdByIndex(String indexAsString) {
-        try {
-            mastersRepository.getStaffByIndex(Integer.parseInt(indexAsString));
-        } catch (NumberFormatException e) {
-            throw new RuntimeException();       // fixme
-        }
-    }
+//    public String getStaffIdByIndex(String indexAsString) { //FIXME VOID to STRING
+//        try {
+//            mastersRepository.getStaffByIndex(Integer.parseInt(indexAsString));
+//        } catch (NumberFormatException e) {
+//            throw new RuntimeException();       // fixme
+//        }
+//    }
 
     public String getMastersChoice() {
-        mastersRepository.getMastersChoice();
+       return mastersRepository.getMastersChoice();
     }
 }

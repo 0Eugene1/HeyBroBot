@@ -51,12 +51,7 @@ public class YClientsService {
             //  Преобразуем JSON в объект MasterList
             ResponseMasterList responseMasterList = gson.fromJson(json, ResponseMasterList.class);
             mastersService.clearAndAddMasters(responseMasterList.getData());
-
-
-            // todo toString() in MastersRepository
-
-
-
+            //toString()
             return mastersService.getMastersChoice();
 
         } catch (IOException | InterruptedException e) {
@@ -73,7 +68,7 @@ public class YClientsService {
                     .uri(URI.create("https://api.yclients.com/api/v1/book_staff_seances/" + companyId + "/" + staff_id))
                     .header("Accept", "application/vnd.yclients.v2+json")
                     .header("Content-Type", "application/json")
-                    .header("Authorization", "j8p3aadsnhaexg4wp8k9") //todo нужно ли?
+                    .header("Authorization", "j8p3aadsnhaexg4wp8k9")
                     .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -81,8 +76,8 @@ public class YClientsService {
             String json = response.body();
             System.out.println(json);
 
-            ResponseSeanceDate dataJson = gson.fromJson(json, ResponseSeanceDate.class);  //todo так ли??
-            List<Data> responseSeances = dataJson.getData();    //??
+            ResponseSeanceDate dataJson = gson.fromJson(json, ResponseSeanceDate.class);
+            List<Data> responseSeances = dataJson.getData();
 
             StringBuilder builder = new StringBuilder();
 
@@ -93,23 +88,24 @@ public class YClientsService {
 
             }
             return builder.toString();
-//            }else{
-//            return "Не удалось получить список сеансов";
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
-    // ПОЛУЧАЕМ УНИКАЛЬНЫЙ ID МАСТЕРА fixme как с этим работать и нужно ли?         StringBuilder instead of System.out.println()
-//    public void getMasterId(int companyId) { // нужно ли?
+////    // ПОЛУЧАЕМ УНИКАЛЬНЫЙ ID МАСТЕРА fixme как с этим работать и нужно ли?         StringBuilder instead of System.out.println()
+//    public String getMasterIds(int companyId) { // нужно ли?
 //
-//        MasterList masterList = getMasterList(companyId);
+//        ResponseMasterList masterList = gson.fromJson(getMasterList(companyId), ResponseMasterList.class);
 //        if (masterList.isSuccess()) {
 //            for (Master master : masterList.getData()) {
-//                System.out.println("ID мастера: " + master.getId() + ", Имя: " + master.getName());
+//                StringBuilder sb = new StringBuilder();
+//                sb.append("Имя: ").append(master.getName())
+//                        .append(", ID: ").append(master.getId())
+//                        .append("\n");
+//                return sb.toString();
 //            }
-//        } else {
-//            System.out.println("Не удалось получить список мастеров");
 //        }
+//        return getMasterList(86034);
 //    }
 
     // СПИСОК УСЛУГ ДОСТУПНЫХ ДЛЯ БРОНИРОВАНИЯ
@@ -191,15 +187,17 @@ public class YClientsService {
     }
 
     //ПОЛУЧЕНИЕ ГРАФИКОВ РАБОТЫ СОТРУДНИКОВ
-    public String getSchedule(int companyId) {  //fixme КАК РАБОТАТЬ С ДАТАМИ?
+    public String getSchedule(int companyId, String startDate, String endDate) {
 
         try (HttpClient client = HttpClient.newHttpClient()) {
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.yclients.com/api/v1/company/" + companyId + "/staff/schedule"))
+                    .uri(URI.create("https://api.yclients.com/api/v1/company/" + companyId + "/staff/schedule"
+                            + "?start_date=" + startDate
+                            + "&end_date=" + endDate))
                     .header("Accept", "application/vnd.yclients.v2+json")
                     .header("Content-Type", "application/json")
-                    .header("Authorization", "j8p3aadsnhaexg4wp8k9")  //todo НЕ УКАЗАН ИДЕНТЕФИКАТОР, НО ОН УКАЗАН
+                    .header("Authorization", "Bearer j8p3aadsnhaexg4wp8k9")  //todo НЕ УКАЗАН ИДЕНТЕФИКАТОР, НО ОН УКАЗАН
                     .GET()
                     .build();
 
